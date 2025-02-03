@@ -47,4 +47,11 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 
 vim.keymap.set('n', '<leader>pv', '<cmd>Ex<CR>')
 
+-- Get from here https://github.com/bcampolo/nvim-starter-kit
+-- General keymaps
+vim.keymap.set('n', '<leader>wq', ':wq<CR>', { desc = 'Save and quit' })
+vim.keymap.set('n', '<leader>qq', ':q!<CR>', { desc = 'Quit without saving' })
+vim.keymap.set('n', '<leader>ww', ':w<CR>', { desc = 'Save' })
+vim.keymap.set('n', '<leader>wa', ':wa<CR>', { desc = 'Save all' })
+
 -- vim: ts=2 sts=2 sw=2 et
