@@ -1,0 +1,3 @@
+return {
+  'noion/jstacktrace.nvim',
+}
