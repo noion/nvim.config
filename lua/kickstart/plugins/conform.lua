@@ -29,7 +29,7 @@ return {
         if vim.bo[bufnr].filetype == 'java' then
           vim.fn.jobstart('format_ce ' .. vim.fn.expand '%:p', {
             on_exit = function(_, code)
-              print('exit code: ' .. code)
+              print('Formated by Idea, exit code: ' .. code)
             end,
           })
         end

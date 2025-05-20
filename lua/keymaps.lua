@@ -50,8 +50,9 @@ vim.keymap.set('n', '<leader>pv', '<cmd>Ex<CR>')
 -- Get from here https://github.com/bcampolo/nvim-starter-kit
 -- General keymaps
 vim.keymap.set('n', '<leader>wq', ':wq<CR>', { desc = 'Save and quit' })
-vim.keymap.set('n', '<leader>qq', ':q!<CR>', { desc = 'Quit without saving' })
+vim.keymap.set('n', '<leader>eq', ':q!<CR>', { desc = 'Quit without saving' })
 vim.keymap.set('n', '<leader>ww', ':w<CR>', { desc = 'Save' })
 vim.keymap.set('n', '<leader>wa', ':wa<CR>', { desc = 'Save all' })
+vim.keymap.set('n', '<leader>xx', ':bd<CR>', { desc = 'Close buffer' })
 
 -- vim: ts=2 sts=2 sw=2 et
