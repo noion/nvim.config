@@ -45,7 +45,8 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
-vim.keymap.set('n', '<leader>pv', '<cmd>Ex<CR>')
+-- vim.keymap.set('n', '<leader>pv', '<cmd>Ex<CR>')
+vim.keymap.set('n', '<leader>pv', '<cmd>Oil<CR>', { desc = 'Open file explorer' })
 
 -- Get from here https://github.com/bcampolo/nvim-starter-kit
 -- General keymaps
