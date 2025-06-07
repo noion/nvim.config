@@ -7,8 +7,8 @@ return {
     keymaps = {
       ['g?'] = { 'actions.show_help', mode = 'n' },
       ['<CR>'] = 'actions.select',
-      ['<C-S>'] = { 'actions.select', opts = { vertical = true } },
-      ['<C-H>'] = { 'actions.select', opts = { horizontal = true } },
+      ['<C-s>'] = { 'actions.select', opts = { vertical = true } },
+      ['<C-_>'] = { 'actions.select', opts = { horizontal = true } },
       ['<C-t>'] = { 'actions.select', opts = { tab = true } },
       ['<C-p>'] = 'actions.preview',
       ['<C-c>'] = { 'actions.close', mode = 'n' },
@@ -28,7 +28,7 @@ return {
   -- dependencies = { "nvim-tree/nvim-web-devicons" }, -- use if you prefer nvim-web-devicons
   -- Lazy loading is not recommended because it is very tricky to make it work correctly in all situations.
   lazy = false,
-  config = function()
-    require('oil').setup {}
+  config = function(_, opts)
+    require('oil').setup(opts)
   end,
 }
