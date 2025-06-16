@@ -109,6 +109,11 @@ return {
           --  For example, in C this would take you to the header.
           map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
+          map('<leader>ch', vim.lsp.buf.hover, '[C]ode [H]over Documentation')
+
+          map('<leader>cs', vim.lsp.buf.signature_help, '[C]ode [S]ignature Help')
+          map('<C-s>', vim.lsp.buf.signature_help, 'Code Signature Help', { 'n', 'i', 's' })
+
           -- The following two autocommands are used to highlight references of the
           -- word under your cursor when your cursor rests there for a little while.
           --    See `:help CursorHold` for information about when this is executed
