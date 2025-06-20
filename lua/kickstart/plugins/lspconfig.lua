@@ -18,8 +18,8 @@ return {
     'neovim/nvim-lspconfig',
     dependencies = {
       -- Automatically install LSPs and related tools to stdpath for Neovim
-      { 'williamboman/mason.nvim', version = '^1.0.0', config = true }, -- NOTE: Must be loaded before dependants
-      { 'williamboman/mason-lspconfig.nvim', version = '^1.0.0' },
+      { 'mason-org/mason.nvim', version = '^1.11.0', config = true }, -- NOTE: Must be loaded before dependants
+      { 'mason-org/mason-lspconfig.nvim', version = '^1.32.0' },
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
       -- Useful status updates for LSP.
@@ -113,6 +113,10 @@ return {
 
           map('<leader>cs', vim.lsp.buf.signature_help, '[C]ode [S]ignature Help')
           map('<C-s>', vim.lsp.buf.signature_help, 'Code Signature Help', { 'n', 'i', 's' })
+
+          map('<C-M-v>', '<cmd>JavaRefactorExtractVariable<CR>', 'Java Extract Variable', { 'n', 'i', 's' })
+          map('<C-M-m>', '<cmd>JavaRefactorExtractMethod<CR>', 'Java Extract Method', { 'n', 'i', 's' })
+          map('<C-M-s>', '<cmd>JavaRefactorExtractConstant<CR>', 'Java Extract Static Variable', { 'n', 'i', 's' })
 
           -- The following two autocommands are used to highlight references of the
           -- word under your cursor when your cursor rests there for a little while.
@@ -211,6 +215,7 @@ return {
         },
       }
 
+      -- Java config
       require('java').setup()
       require('neoconf').setup {
         -- override any of the default settings here
@@ -230,6 +235,7 @@ return {
         'stylua', -- Used to format Lua code
         'pyright',
         'bashls',
+        'kotlin-lsp',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -245,6 +251,24 @@ return {
           end,
         },
       }
+
+      vim.lsp.config['kotlin_lsp'] = {
+        -- Command and arguments to start the server.
+        cmd = { 'kotlin-lsp', '--stdio' },
+
+        -- Filetypes to automatically attach to.
+        filetypes = { 'kotlin' },
+
+        -- Sets the "root directory" to the parent directory of the file in the
+        -- current buffer that contains either a ".luarc.json" or a
+        -- ".luarc.jsonc" file. Files that share a root directory will reuse
+        -- the connection to the same LSP server.
+        -- Nested lists indicate equal priority, see |vim.lsp.Config|.
+        root_markers = { 'settings.gradle', 'settings.gradle.kts', 'pom.xml', 'build.gradle', 'build.gradle.kts', 'workspace.json' },
+
+        single_file_support = true,
+      }
+      vim.lsp.enable 'kotlin_lsp'
     end,
   },
 }
