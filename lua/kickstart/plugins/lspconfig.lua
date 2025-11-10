@@ -13,22 +13,26 @@ return {
     },
   },
   { 'Bilal2453/luvit-meta', lazy = true },
+  'mfussenegger/nvim-jdtls',
+  dependencies = {
+    'mfussenegger/nvim-dap',
+  },
   {
     -- Main LSP Configuration
-    'neovim/nvim-lspconfig',
-    dependencies = {
-      -- Automatically install LSPs and related tools to stdpath for Neovim
-      { 'mason-org/mason.nvim', version = '^1.11.0', config = true }, -- NOTE: Must be loaded before dependants
-      { 'mason-org/mason-lspconfig.nvim', version = '^1.32.0' },
-      'WhoIsSethDaniel/mason-tool-installer.nvim',
+    -- 'neovim/nvim-lspconfig',
+    -- dependencies = {
+    -- Automatically install LSPs and related tools to stdpath for Neovim
+    { 'mason-org/mason.nvim', version = '^1.11.0', config = true }, -- NOTE: Must be loaded before dependants
+    { 'mason-org/mason-lspconfig.nvim', version = '^1.32.0' },
+    'WhoIsSethDaniel/mason-tool-installer.nvim',
 
-      -- Useful status updates for LSP.
-      -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
-      { 'j-hui/fidget.nvim', opts = {} },
+    -- Useful status updates for LSP.
+    -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
+    { 'j-hui/fidget.nvim', opts = {} },
 
-      -- Allows extra capabilities provided by nvim-cmp
-      'hrsh7th/cmp-nvim-lsp',
-    },
+    -- Allows extra capabilities provided by nvim-cmp
+    'hrsh7th/cmp-nvim-lsp',
+    -- },
     config = function()
       -- Brief aside: **What is LSP?**
       --
@@ -216,7 +220,7 @@ return {
       }
 
       -- Java config
-      require('java').setup()
+      -- require('java').setup()
       require('neoconf').setup {
         -- override any of the default settings here
       }
@@ -236,6 +240,9 @@ return {
         'pyright',
         'bashls',
         'kotlin-lsp',
+        'jdtls',
+        'java-debug-adapter',
+        'java-test',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
