@@ -40,6 +40,7 @@ return {
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
+        -- java = { 'google_java_format' },
         -- Conform can also run multiple formatters sequentially
         -- python = { "isort", "black" },
         --
