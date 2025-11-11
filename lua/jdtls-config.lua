@@ -65,7 +65,7 @@ local function java_keymaps(bufnr)
   -- Allow run JdtUpdateConfig as Vim command
   vim.cmd "command! -buffer JdtUpdateConfig lua require('jdtls').update_project_config()"
   vim.keymap.set('n', '<leader>Ju', function()
-    vim.cmd 'JdtUpdateConfig<CR>'
+    vim.cmd 'JdtUpdateConfig'
   end, { desc = '[J]ava: [U]pdate Config' })
   -- Allow to run JdtBytecode as Vim command
   vim.cmd "command! -buffer JdtBytecode lua require('jdtls').javap()"
@@ -162,7 +162,7 @@ local function setup_jdtls()
   local bundles = get_bundles()
 
   -- Define the root directory of the project by looking for the specific markers
-  local root_dir = jdtls.setup.find_root { '.git', 'mvnw', 'gradlew', 'pom.xml', 'build.gradle', 'build.kt' }
+  local root_dir = jdtls.setup.find_root { '.git', 'mvnw', 'gradlew', 'pom.xml', 'build.gradle', 'build.gradle.kts' }
 
   -- Tell our JDTLS language features it is capable of
   local capabilities = {
@@ -312,13 +312,13 @@ local function setup_jdtls()
     })
   end
 
-  jdtls.start_or_attach = {
+  jdtls.start_or_attach {
     cmd = cmd,
     root_dir = root_dir,
     settings = settings_j,
     capabilities = capabilities,
     init_options = init_options,
-    on_attach = on_attach(),
+    on_attach = on_attach,
   }
 end
 
