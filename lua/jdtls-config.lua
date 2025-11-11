@@ -25,7 +25,7 @@ local function get_config_path_name()
 end
 
 local function get_jdtls()
-  local jdtls_path = vim.fn.expand '$MASON/bin/jdtls'
+  local jdtls_path = vim.fn.expand '$MASON/packages/jdtls'
   -- Obtain the path to the JDTLS launcher jar
   local launcher = vim.fn.glob(jdtls_path .. '/plugins/org.eclipse.equinox.launcher_*.jar')
   -- Declare the system we are using, windows use win, osx use mac, linux use linux
@@ -36,13 +36,13 @@ local function get_jdtls()
 end
 
 local function get_bundles()
-  local java_debug_path = vim.fn.expand '$MASON/bin/java-debug-adapter'
+  local java_debug_path = vim.fn.expand '$MASON/packages/java-debug-adapter'
 
   local bundles = {
     vim.fn.glob(java_debug_path .. '/extension/server/com.microsoft.java.debug.plugin-*.jar', true),
   }
 
-  local java_test_path = vim.fn.expand '$MASON/bin/java-test'
+  local java_test_path = vim.fn.expand '$MASON/packages/java-test'
   vim.list_extend(bundles, vim.split(vim.fn.glob(java_test_path .. '/extension/server/*.jar', true), '\n'))
 
   return bundles
