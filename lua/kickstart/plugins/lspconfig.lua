@@ -19,20 +19,20 @@ return {
   },
   {
     -- Main LSP Configuration
-    -- 'neovim/nvim-lspconfig',
-    -- dependencies = {
-    -- Automatically install LSPs and related tools to stdpath for Neovim
-    { 'mason-org/mason.nvim', version = '^2.10.0', config = true }, -- NOTE: Must be loaded before dependants
-    { 'mason-org/mason-lspconfig.nvim', version = '^2.1.0' },
-    'WhoIsSethDaniel/mason-tool-installer.nvim',
+    'neovim/nvim-lspconfig',
+    dependencies = {
+      -- Automatically install LSPs and related tools to stdpath for Neovim
+      { 'mason-org/mason.nvim', version = '^2.10.0', config = true }, -- NOTE: Must be loaded before dependants
+      { 'mason-org/mason-lspconfig.nvim', version = '^2.1.0' },
+      'WhoIsSethDaniel/mason-tool-installer.nvim',
 
-    -- Useful status updates for LSP.
-    -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
-    { 'j-hui/fidget.nvim', opts = {} },
+      -- Useful status updates for LSP.
+      -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
+      { 'j-hui/fidget.nvim', opts = {} },
 
-    -- Allows extra capabilities provided by nvim-cmp
-    'hrsh7th/cmp-nvim-lsp',
-    -- },
+      -- Allows extra capabilities provided by nvim-cmp
+      'hrsh7th/cmp-nvim-lsp',
+    },
     config = function()
       -- Brief aside: **What is LSP?**
       --
@@ -254,7 +254,8 @@ return {
             -- by the server configuration above. Useful when disabling
             -- certain features of an LSP (for example, turning off formatting for ts_ls)
             server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-            require('lspconfig')[server_name].setup(server)
+            vim.lsp.config[server_name].setup(server)
+            -- require('lspconfig')[server_name].setup(server)
           end,
         },
       }
@@ -274,6 +275,10 @@ return {
         root_markers = { 'settings.gradle', 'settings.gradle.kts', 'pom.xml', 'build.gradle', 'build.gradle.kts', 'workspace.json' },
 
         single_file_support = true,
+        init_options = {
+          snippetSupport = true,
+          codeActionLiteralSupport = true,
+        },
       }
       vim.lsp.enable 'kotlin_lsp'
     end,
