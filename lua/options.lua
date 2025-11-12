@@ -63,4 +63,13 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 20
 
+-- Spell check
+vim.opt.encoding = 'utf-8'
+-- make sure the spellfile directory exists, sometimes nvim fails to create it
+-- when downloading spellfiles
+-- if NetRW is disabled, downloading of spellfiles fails!
+-- See the comment in the filesystem_browsing.lua file in the Oil plugin section.
+vim.fn.mkdir(vim.fn.stdpath 'data' .. 'site/spell', 'p')
+vim.opt.spell = true
+vim.opt.spelllang = { 'en_us', 'ru_ru', 'ru_yo' }
 -- vim: ts=2 sts=2 sw=2 et

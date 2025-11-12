@@ -81,6 +81,7 @@ return {
           table.insert(file_paths, item.value)
         end
 
+        -- harpoon
         require('telescope.pickers')
           .new({}, {
             prompt_title = 'Harpoon',
@@ -115,6 +116,12 @@ return {
       vim.keymap.set('n', '<leader>sr', builtin.resume, { desc = '[S]earch [R]esume' })
       vim.keymap.set('n', '<leader>s.', builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
       vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
+      -- git
+      vim.keymap.set('n', '<leader>sGc', builtin.git_commits, { desc = '[S]earch [G]it [C]ommits' })
+      vim.keymap.set('n', '<leader>sGb', builtin.git_branches, { desc = '[S]earch [G]it [B]ranches' })
+      vim.keymap.set('n', '<leader>sGt', builtin.git_status, { desc = '[S]earch [G]it S[t]atus' })
+      vim.keymap.set('n', '<leader>sGs', builtin.git_stash, { desc = '[S]earch [G]it [S]tash' })
+      vim.keymap.set('n', '<leader>sGu', builtin.git_bcommits, { desc = '[S]earch [G]it [U]ser Commits' })
 
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
