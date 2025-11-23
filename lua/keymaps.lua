@@ -56,4 +56,12 @@ vim.keymap.set('n', '<leader>ww', ':w<CR>', { desc = 'Save' })
 vim.keymap.set('n', '<leader>wa', ':wa<CR>', { desc = 'Save all' })
 vim.keymap.set('n', '<leader>xx', ':bd<CR>', { desc = 'Close buffer' })
 
+-- Tab keymaps
+vim.keymap.set('n', '<leader>tn', ':tabnext<CR>', { desc = 'Next tab' })
+vim.keymap.set('n', '<leader>tp', ':tabprevious<CR>', { desc = 'Previous tab' })
+vim.keymap.set('n', '<leader>tc', ':tabnew<CR>', { desc = 'New tab' })
+
+-- DBUI
+vim.keymap.set('n', '<leader>db', ':DBUI<CR>', { desc = 'Open DBUI' })
+vim.keymap.set('n', '<leader>dc', ':DBUIClose<CR>', { desc = 'Close DBUI' })
 -- vim: ts=2 sts=2 sw=2 et
