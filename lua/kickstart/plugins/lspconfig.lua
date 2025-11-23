@@ -23,7 +23,15 @@ return {
     dependencies = {
       -- Automatically install LSPs and related tools to stdpath for Neovim
       { 'mason-org/mason.nvim', version = '^2.10.0', config = true }, -- NOTE: Must be loaded before dependants
-      { 'mason-org/mason-lspconfig.nvim', version = '^2.1.0' },
+      {
+        'mason-org/mason-lspconfig.nvim',
+        version = '^2.1.0',
+        opts = {
+          automatic_enable = {
+            exclude = { 'kotlin_lsp', 'jdtls' },
+          },
+        },
+      },
       'WhoIsSethDaniel/mason-tool-installer.nvim',
 
       -- Useful status updates for LSP.
@@ -58,7 +66,6 @@ return {
       --
       -- If you're wondering about lsp vs treesitter, you can check out the wonderfully
       -- and elegantly composed help section, `:help lsp-vs-treesitter`
-
       --  This function gets run when an LSP attaches to a particular buffer.
       --    That is to say, every time a new file is opened that is associated with
       --    an lsp (for example, opening `main.rs` is associated with `rust_analyzer`) this
@@ -118,9 +125,9 @@ return {
           map('<leader>cs', vim.lsp.buf.signature_help, '[C]ode [S]ignature Help')
           map('<C-s>', vim.lsp.buf.signature_help, 'Code Signature Help', { 'n', 'i', 's' })
 
-          map('<C-M-v>', '<cmd>JavaRefactorExtractVariable<CR>', 'Java Extract Variable', { 'n', 'i', 's' })
-          map('<C-M-m>', '<cmd>JavaRefactorExtractMethod<CR>', 'Java Extract Method', { 'n', 'i', 's' })
-          map('<C-M-s>', '<cmd>JavaRefactorExtractConstant<CR>', 'Java Extract Static Variable', { 'n', 'i', 's' })
+          -- map('<C-M-v>', '<cmd>JavaRefactorExtractVariable<CR>', 'Java Extract Variable', { 'n', 'i', 's' })
+          -- map('<C-M-m>', '<cmd>JavaRefactorExtractMethod<CR>', 'Java Extract Method', { 'n', 'i', 's' })
+          -- map('<C-M-s>', '<cmd>JavaRefactorExtractConstant<CR>', 'Java Extract Static Variable', { 'n', 'i', 's' })
 
           -- The following two autocommands are used to highlight references of the
           -- word under your cursor when your cursor rests there for a little while.
@@ -164,13 +171,13 @@ return {
       })
 
       -- Change diagnostic symbols in the sign column (gutter)
-      -- if vim.g.have_nerd_font then
-      --   local signs = { Error = '', Warn = '', Hint = '', Info = '' }
-      --   for type, icon in pairs(signs) do
-      --     local hl = 'DiagnosticSign' .. type
-      --     vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
-      --   end
-      -- end
+      if vim.g.have_nerd_font then
+        local signs = { Error = '', Warn = '', Hint = '', Info = '' }
+        for type, icon in pairs(signs) do
+          local hl = 'DiagnosticSign' .. type
+          vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = hl })
+        end
+      end
 
       -- LSP servers and clients are able to communicate to each other what features they support.
       --  By default, Neovim doesn't support everything that is in the LSP specification.
@@ -220,6 +227,7 @@ return {
       }
 
       -- Java config
+      -- We're using jdtls for Java support, configured in after/ftplugin/java.lua
       -- require('java').setup()
       require('neoconf').setup {
         -- override any of the default settings here
@@ -260,27 +268,27 @@ return {
         },
       }
 
-      vim.lsp.config['kotlin_lsp'] = {
-        -- Command and arguments to start the server.
-        cmd = { 'kotlin-lsp', '--stdio' },
-
-        -- Filetypes to automatically attach to.
-        filetypes = { 'kotlin' },
-
-        -- Sets the "root directory" to the parent directory of the file in the
-        -- current buffer that contains either a ".luarc.json" or a
-        -- ".luarc.jsonc" file. Files that share a root directory will reuse
-        -- the connection to the same LSP server.
-        -- Nested lists indicate equal priority, see |vim.lsp.Config|.
-        root_markers = { 'settings.gradle', 'settings.gradle.kts', 'pom.xml', 'build.gradle', 'build.gradle.kts', 'workspace.json' },
-
-        single_file_support = true,
-        init_options = {
-          snippetSupport = true,
-          codeActionLiteralSupport = true,
-        },
-      }
-      vim.lsp.enable 'kotlin_lsp'
+      -- vim.lsp.config['kotlin_lsp'] = {
+      --   -- Command and arguments to start the server.
+      --   cmd = { 'kotlin-lsp', '--stdio' },
+      --
+      --   -- Filetypes to automatically attach to.
+      --   filetypes = { 'kotlin' },
+      --
+      --   -- Sets the "root directory" to the parent directory of the file in the
+      --   -- current buffer that contains either a ".luarc.json" or a
+      --   -- ".luarc.jsonc" file. Files that share a root directory will reuse
+      --   -- the connection to the same LSP server.
+      --   -- Nested lists indicate equal priority, see |vim.lsp.Config|.
+      --   root_markers = { 'settings.gradle', 'settings.gradle.kts', 'pom.xml', 'build.gradle', 'build.gradle.kts', 'workspace.json' },
+      --
+      --   single_file_support = true,
+      --   init_options = {
+      --     snippetSupport = true,
+      --     codeActionLiteralSupport = true,
+      --   },
+      -- }
+      -- vim.lsp.enable 'kotlin_lsp'
     end,
   },
 }
