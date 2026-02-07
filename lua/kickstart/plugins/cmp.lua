@@ -111,6 +111,7 @@ return {
           { name = 'luasnip' },
           { name = 'path' },
           { name = 'nvim_lsp_signature_help' },
+          { name = 'vim-dadbod-completion' }, -- SQL completions in all files
           { name = 'copilot' },
         },
       }
@@ -120,6 +121,16 @@ return {
           { name = 'buffer' },
           { name = 'copilot' },
         },
+      })
+      -- Enable dadbod completion in java/kotlin/go for SQL strings
+      cmp.setup.filetype({ 'java', 'kotlin', 'go' }, {
+        sources = cmp.config.sources({
+          { name = 'nvim_lsp' },
+          { name = 'vim-dadbod-completion' },
+          { name = 'luasnip' },
+          { name = 'path' },
+          { name = 'copilot' },
+        }),
       })
     end,
   },
