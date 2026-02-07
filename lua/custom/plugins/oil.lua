@@ -3,15 +3,41 @@ return {
     'stevearc/oil.nvim',
     ---@module 'oil'
     ---@type oil.SetupOpts
-    -- disabling NetRW has the side effect of making (n)vim unable to download spellfiles!
-    -- if you need to download/restore your spell files, uncomment temporarily the next line,
-    -- download the spell files, and comment it out again.
-    -- cmd = 'Oil',
-    -- see dpetka2001's comment about the previous line
-    -- https://www.reddit.com/r/neovim/comments/19d0we4/need_help_with_missing_download_spell_file/
+    -- Auto-download spell files before loading oil (oil disables NetRW)
+    init = function()
+      local spell_dir = vim.fn.stdpath 'data' .. '/site/spell'
+      vim.fn.mkdir(spell_dir, 'p')
+      
+      -- Check if all required spell files exist
+      local required_spells = { 'ru.utf-8.spl', 'en.utf-8.spl' }
+      local missing = {}
+      for _, spell_file in ipairs(required_spells) do
+        if vim.fn.filereadable(spell_dir .. '/' .. spell_file) == 0 then
+          table.insert(missing, spell_file:match('^(%w+)'))
+        end
+      end
+      
+      -- Download missing spell files before oil loads
+      if #missing > 0 then
+        vim.notify('Downloading missing spell files: ' .. table.concat(missing, ', '), vim.log.levels.INFO)
+        -- Temporarily enable netrw for downloading
+        vim.g.loaded_netrw = nil
+        vim.g.loaded_netrwPlugin = nil
+        
+        for _, lang in ipairs(missing) do
+          vim.cmd('silent! mkspell! ' .. spell_dir .. '/' .. lang .. '.utf-8.spl')
+        end
+        
+        vim.notify('Spell files downloaded. Oil will now load.', vim.log.levels.INFO)
+      end
+    end,
     opts = {
       default_file_explorer = true,
       use_default_keymaps = false, -- Set to false to disable the default keymaps
+      -- Skip confirmation for simple operations (copy, move, rename single files)
+      skip_confirm_for_simple_edits = true,
+      -- Prompt to save changes when selecting a new entry with modified buffer
+      prompt_save_on_select_new_entry = false,
       win_options = {
         signcolumn = 'auto:2',
       },
@@ -23,6 +49,7 @@ return {
         ['<C-t>'] = { 'actions.select', opts = { tab = true } },
         ['<C-p>'] = 'actions.preview',
         ['<C-c>'] = { 'actions.close', mode = 'n' },
+        ['<Esc>'] = { 'actions.close', mode = 'n' },
         ['<C-r>'] = 'actions.refresh',
         ['-'] = { 'actions.parent', mode = 'n' },
         ['_'] = { 'actions.open_cwd', mode = 'n' },
@@ -33,9 +60,6 @@ return {
         ['g.'] = { 'actions.toggle_hidden', mode = 'n' },
         ['g\\'] = { 'actions.toggle_trash', mode = 'n' },
       },
-      vim.keymap.set('n', '<leader>o', function()
-        require('oil').open_float()
-      end, { desc = 'Open oil in a floating window' }),
       -- Configuration for the floating window in oil.open_float
       float = {
         -- Padding around the floating window
@@ -61,6 +85,15 @@ return {
       view_options = {
         -- Show files and directories that start with "."
         show_hidden = true,
+      },
+    },
+    keys = {
+      {
+        '<leader>o',
+        function()
+          require('oil').open_float()
+        end,
+        desc = 'Open oil in a floating window',
       },
     },
     -- Optional dependencies
