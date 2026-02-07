@@ -206,6 +206,7 @@ return {
         gopls = {},
         pyright = {},
         bashls = {},
+        groovyls = {},
         -- rust_analyzer = {},
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
@@ -255,6 +256,7 @@ return {
         'bashls',
         'gopls',
         'gofumpt',
+        'groovyls',
         'jdtls',
         'java-debug-adapter',
         'java-test',

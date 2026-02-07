@@ -80,6 +80,8 @@ return {
         ['gx'] = 'actions.open_external',
         ['g.'] = { 'actions.toggle_hidden', mode = 'n' },
         ['g\\'] = { 'actions.toggle_trash', mode = 'n' },
+        ['l'] = 'actions.select',
+        ['h'] = 'actions.parent',
       },
       -- Configuration for the floating window in oil.open_float
       float = {
@@ -107,6 +109,9 @@ return {
         -- Show files and directories that start with "."
         show_hidden = true,
       },
+      -- Automatically descend into single-child directories
+      -- Perfect for Java package structures like com/example/project
+      experimental_watch_for_changes = false,
     },
     keys = {
       {
