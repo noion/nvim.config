@@ -43,6 +43,7 @@ local runtimes = {
 }
 
 -- INFO: only work for mac add here aditional os and arch if need https://luajit.org/ext_jit.html#jit_arch
+---@diagnostic disable-next-line: undefined-global
 local function get_os_arch()
   local arch = jit.arch
   local os = jit.os
@@ -53,10 +54,12 @@ local function get_os_arch()
     arch = ''
   end
   -- INFO: add here aditional os if need
+  ---@type string
+  local os_name = os
   if os == 'OSX' then
-    os = 'mac'
+    os_name = 'mac'
   end
-  return os, arch
+  return os_name, arch
 end
 
 local function get_config_path_name()
@@ -127,6 +130,7 @@ end
 
 local function enable_debugger(bufnr)
   local jdtls = require 'jdtls'
+  ---@diagnostic disable-next-line: missing-fields
   jdtls.setup_dap { hotcodereplace = 'auto' }
   require('jdtls.dap').setup_dap_main_class_configs()
 
@@ -166,13 +170,13 @@ local function java_keymaps(bufnr)
     jdtls.extract_variable()
   end, { desc = '[J]ava: Extract [V]ariable', buffer = bufnr })
   vim.keymap.set('v', '<leader>Jv', function()
-    jdtls.extract_variable(true)
+    jdtls.extract_variable { visual = true }
   end, { desc = '[J]ava: Extract [V]ariable', buffer = bufnr })
   vim.keymap.set({ 'n', 'i' }, '<C-M-v>', function()
     jdtls.extract_variable()
   end, { desc = 'Java: Extract Variable', buffer = bufnr })
   vim.keymap.set('v', '<C-M-v>', function()
-    jdtls.extract_variable(true)
+    jdtls.extract_variable { visual = true }
   end, { desc = 'Java: Extract Variable', buffer = bufnr })
   -- Set a vim motion to extract a static variable
   vim.keymap.set({ 'n', 'v' }, '<leader>Js', function()
@@ -183,13 +187,13 @@ local function java_keymaps(bufnr)
     jdtls.extract_method()
   end, { desc = '[J]ava: Extract [M]ethod', buffer = bufnr })
   vim.keymap.set('v', '<leader>Jm', function()
-    jdtls.extract_method(true)
+    jdtls.extract_method { visual = true }
   end, { desc = '[J]ava: Extract [M]ethod', buffer = bufnr })
   vim.keymap.set({ 'n', 'i' }, '<C-M-m>', function()
     jdtls.extract_method()
   end, { desc = 'Java: Extract Method', buffer = bufnr })
   vim.keymap.set('v', '<C-M-m>', function()
-    jdtls.extract_method(true)
+    jdtls.extract_method { visual = true }
   end, { desc = 'Java: Extract Method', buffer = bufnr })
 
   -- Set a Vim motion to generate test for current class
@@ -203,8 +207,8 @@ local function java_keymaps(bufnr)
   -- local function buf_set_keymap(...)
   --   vim.api.nvim_buf_set_keymap(bufnr, ...)
   -- end
-  local function buf_set_option(...)
-    vim.api.nvim_buf_set_option(bufnr, ...)
+  local function buf_set_option(option, value)
+    vim.bo[bufnr][option] = value
   end
 
   buf_set_option('omnifunc', 'v:lua.vim.lsp.omnifunc')

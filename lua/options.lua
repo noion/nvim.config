@@ -63,9 +63,20 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 20
 
+-- Avoid 'Press ENTER' prompts
+vim.opt.shortmess:append('I')  -- Don't show intro message
+
 -- Spell check
 vim.opt.encoding = 'utf-8'
 -- Spell files are auto-downloaded by oil.lua init function
 vim.opt.spell = true
 vim.opt.spelllang = { 'en', 'ru' }  -- Use 'ru' instead of 'ru_ru', 'ru_yo'
+
+-- Configure diagnostics
+vim.diagnostic.config({
+  virtual_text = true,  -- Show inline diagnostic messages on all lines
+  signs = true,         -- Show signs in gutter
+  underline = true,     -- Underline diagnostic issues
+  update_in_insert = false,
+})
 -- vim: ts=2 sts=2 sw=2 et

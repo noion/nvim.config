@@ -2,33 +2,54 @@ return {
   {
     'stevearc/oil.nvim',
     ---@module 'oil'
-    ---@type oil.SetupOpts
     -- Auto-download spell files before loading oil (oil disables NetRW)
+    ---@diagnostic disable-next-line: assign-type-mismatch
     init = function()
       local spell_dir = vim.fn.stdpath 'data' .. '/site/spell'
       vim.fn.mkdir(spell_dir, 'p')
-      
+
       -- Check if all required spell files exist
       local required_spells = { 'ru.utf-8.spl', 'en.utf-8.spl' }
       local missing = {}
       for _, spell_file in ipairs(required_spells) do
-        if vim.fn.filereadable(spell_dir .. '/' .. spell_file) == 0 then
-          table.insert(missing, spell_file:match('^(%w+)'))
+        local full_path = spell_dir .. '/' .. spell_file
+        if vim.fn.filereadable(full_path) ~= 1 then
+          table.insert(missing, spell_file:match '^(%w+)')
         end
       end
-      
+
       -- Download missing spell files before oil loads
       if #missing > 0 then
-        vim.notify('Downloading missing spell files: ' .. table.concat(missing, ', '), vim.log.levels.INFO)
         -- Temporarily enable netrw for downloading
         vim.g.loaded_netrw = nil
         vim.g.loaded_netrwPlugin = nil
-        
-        for _, lang in ipairs(missing) do
-          vim.cmd('silent! mkspell! ' .. spell_dir .. '/' .. lang .. '.utf-8.spl')
-        end
-        
-        vim.notify('Spell files downloaded. Oil will now load.', vim.log.levels.INFO)
+
+        -- Schedule download to avoid blocking startup
+        vim.schedule(function()
+          local temp_buf = vim.api.nvim_create_buf(false, true)
+          local temp_win = vim.api.nvim_open_win(temp_buf, false, {
+            relative = 'editor',
+            width = 1,
+            height = 1,
+            row = 0,
+            col = 0,
+            style = 'minimal',
+          })
+          ---@diagnostic disable-next-line: inject-field
+          vim.wo[temp_win].spell = true
+          ---@diagnostic disable-next-line: inject-field
+          vim.bo[temp_buf].spelllang = table.concat(missing, ',')
+
+          -- Clean up after a short delay
+          vim.defer_fn(function()
+            if vim.api.nvim_win_is_valid(temp_win) then
+              vim.api.nvim_win_close(temp_win, true)
+            end
+            if vim.api.nvim_buf_is_valid(temp_buf) then
+              vim.api.nvim_buf_delete(temp_buf, { force = true })
+            end
+          end, 2000)
+        end)
       end
     end,
     opts = {
