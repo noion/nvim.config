@@ -197,7 +197,7 @@ return {
       --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
       local servers = {
         -- clangd = {},
-        -- gopls = {},
+        gopls = {},
         pyright = {},
         bashls = {},
         -- rust_analyzer = {},
@@ -247,7 +247,8 @@ return {
         'stylua', -- Used to format Lua code
         'pyright',
         'bashls',
-        'kotlin-lsp',
+        'gopls',
+        'gofumpt',
         'jdtls',
         'java-debug-adapter',
         'java-test',
@@ -268,27 +269,6 @@ return {
         },
       }
 
-      -- vim.lsp.config['kotlin_lsp'] = {
-      --   -- Command and arguments to start the server.
-      --   cmd = { 'kotlin-lsp', '--stdio' },
-      --
-      --   -- Filetypes to automatically attach to.
-      --   filetypes = { 'kotlin' },
-      --
-      --   -- Sets the "root directory" to the parent directory of the file in the
-      --   -- current buffer that contains either a ".luarc.json" or a
-      --   -- ".luarc.jsonc" file. Files that share a root directory will reuse
-      --   -- the connection to the same LSP server.
-      --   -- Nested lists indicate equal priority, see |vim.lsp.Config|.
-      --   root_markers = { 'settings.gradle', 'settings.gradle.kts', 'pom.xml', 'build.gradle', 'build.gradle.kts', 'workspace.json' },
-      --
-      --   single_file_support = true,
-      --   init_options = {
-      --     snippetSupport = true,
-      --     codeActionLiteralSupport = true,
-      --   },
-      -- }
-      -- vim.lsp.enable 'kotlin_lsp'
     end,
   },
 }

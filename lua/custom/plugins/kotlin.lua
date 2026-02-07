@@ -1,21 +1,27 @@
 return {
   'AlexandrosAlexiou/kotlin.nvim',
   ft = { 'kotlin' },
-  dependencies = { 'mason.nvim', 'mason-lspconfig.nvim', 'oil.nvim' },
+  dependencies = { 'mason.nvim', 'mason-lspconfig.nvim', 'oil.nvim', 'trouble.nvim' },
   config = function()
     require('kotlin').setup {
-      -- Optional: Specify root markers for multi-module projects
       root_markers = {
         'gradlew',
         '.git',
         'mvnw',
         'settings.gradle',
       },
-      -- Optional: Specify a custom Java path to run the server
-      jre_path = os.getenv 'JDK21',
-      -- Optional: Specify additional JVM arguments
+      -- Use bundled JRE from Mason (kotlin-lsp v261+)
+      jre_path = nil,
       jvm_args = {
         '-Xmx4g',
+      },
+      inlay_hints = {
+        enabled = true,
+        parameters = true,
+        types_property = true,
+        types_variable = true,
+        function_return = true,
+        lambda_return = true,
       },
     }
   end,
