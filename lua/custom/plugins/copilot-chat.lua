@@ -40,6 +40,17 @@ return {
       })
 
       chat.setup(opts)
+      
+      -- Keybindings for inline code actions
+      vim.keymap.set({'n', 'v'}, '<leader>cc', ':CopilotChat ', { desc = '[C]opilot [C]hat with prompt' })
+      vim.keymap.set('v', '<leader>ce', ':CopilotChatExplain<CR>', { desc = '[C]opilot [E]xplain' })
+      vim.keymap.set('v', '<leader>cr', ':CopilotChatReview<CR>', { desc = '[C]opilot [R]eview' })
+      vim.keymap.set('v', '<leader>cf', ':CopilotChatFix<CR>', { desc = '[C]opilot [F]ix' })
+      vim.keymap.set('v', '<leader>co', ':CopilotChatOptimize<CR>', { desc = '[C]opilot [O]ptimize' })
+      vim.keymap.set('v', '<leader>cd', ':CopilotChatDocs<CR>', { desc = '[C]opilot [D]ocs' })
+      vim.keymap.set('v', '<leader>ct', ':CopilotChatTests<CR>', { desc = '[C]opilot [T]ests' })
+      vim.keymap.set('n', '<leader>cq', ':CopilotChatFixDiagnostic<CR>', { desc = '[C]opilot Fix Diagnostic' })
+      vim.keymap.set('n', '<leader>cC', ':CopilotChatToggle<CR>', { desc = '[C]opilot Toggle Window' })
     end,
   },
 }
