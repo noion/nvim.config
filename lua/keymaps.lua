@@ -48,14 +48,6 @@ vim.api.nvim_create_autocmd('TextYankPost', {
 -- vim.keymap.set('n', '<leader>pv', '<cmd>Ex<CR>')
 vim.keymap.set('n', '<leader>pv', '<cmd>Oil<CR>', { desc = 'Open file explorer' })
 
--- Quick access to Java files (bypasses deep package structure)
-vim.keymap.set('n', '<leader>fj', function()
-  require('telescope.builtin').find_files {
-    find_command = { 'fd', '*.java', '--type', 'f' },
-    prompt_title = 'Find Java Files',
-  }
-end, { desc = '[F]ind [J]ava files' })
-
 -- Get from here https://github.com/bcampolo/nvim-starter-kit
 -- General keymaps
 vim.keymap.set('n', '<leader>wq', ':wq<CR>', { desc = 'Save and quit' })
