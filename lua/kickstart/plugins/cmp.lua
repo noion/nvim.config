@@ -112,14 +112,12 @@ return {
           { name = 'path' },
           { name = 'nvim_lsp_signature_help' },
           { name = 'vim-dadbod-completion' }, -- SQL completions in all files
-          { name = 'copilot' },
         },
       }
       cmp.setup.filetype({ 'sql', 'mysql', 'plsql' }, {
         sources = {
           { name = 'vim-dadbod-completion' },
           { name = 'buffer' },
-          { name = 'copilot' },
         },
       })
       -- Enable dadbod completion in java/kotlin/go for SQL strings
@@ -129,7 +127,6 @@ return {
           { name = 'vim-dadbod-completion' },
           { name = 'luasnip' },
           { name = 'path' },
-          { name = 'copilot' },
         }),
       })
     end,
