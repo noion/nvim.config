@@ -38,6 +38,34 @@ External Requirements:
 > See [Install Recipes](#Install-Recipes) for additional Windows and Linux specific notes
 > and quick install snippets
 
+#### Requirements of this fork
+
+Beyond the list above, this configuration needs a few things that cannot be
+installed from within Neovim:
+
+- **`tree-sitter` CLI** — required, not optional. `nvim-treesitter` is pinned to
+  its `main` branch, which builds every parser through `tree-sitter build`
+  instead of invoking the C compiler directly. Without it no parser compiles and
+  you get `ENOENT: no such file or directory (cmd): 'tree-sitter'` on startup,
+  leaving every language on regex syntax. Note that Homebrew splits the package:
+  the `tree-sitter` formula is the C library only, the binary lives in
+  `tree-sitter-cli`.
+
+  ```sh
+  brew install tree-sitter-cli    # or: cargo install tree-sitter-cli, npm i -g tree-sitter-cli
+  ```
+
+- **[sdkman](https://sdkman.io) with at least one JDK** — optional, only for
+  Java. `lua/jdtls_config.lua` scans `~/.sdkman/candidates/java` and offers the
+  newest install of each major version to jdtls as an execution environment,
+  preferring Java 21 as the project default. Nothing is hardcoded, so any set of
+  versions works; with no sdkman the runtime list is simply empty.
+
+Everything else — language servers, formatters, debug adapters, treesitter
+parsers — is installed automatically on first launch by `mason` and
+`nvim-treesitter`, so the first start after cloning takes a while and needs
+network access.
+
 ### Install Kickstart
 
 > **NOTE**
