@@ -245,7 +245,9 @@ return {
       --    :Mason
       --
       --  You can press `g?` for help in this menu.
-      require('mason').setup()
+      --  NOTE: mason itself is set up by its own spec above (`config = true`);
+      --  calling `require('mason').setup()` again here would register the
+      --  default registries a second time.
 
       -- You can add other tools here that you want Mason to install
       -- for you, so that they are available from within Neovim.
