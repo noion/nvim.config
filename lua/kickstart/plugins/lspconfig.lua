@@ -13,10 +13,7 @@ return {
     },
   },
   { 'Bilal2453/luvit-meta', lazy = true },
-  'mfussenegger/nvim-jdtls',
-  dependencies = {
-    'mfussenegger/nvim-dap',
-  },
+  { 'mfussenegger/nvim-jdtls', dependencies = { 'mfussenegger/nvim-dap' } },
   {
     -- Main LSP Configuration
     'neovim/nvim-lspconfig',

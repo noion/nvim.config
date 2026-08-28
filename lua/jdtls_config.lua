@@ -21,89 +21,46 @@ local features = {
   debugger = true,
 }
 
+-- Note: the field `name` must be a valid `ExecutionEnvironment`,
+-- you can find the list here:
+-- https://github.com/eclipse/eclipse.jdt.ls/wiki/Running-the-JAVA-LS-server-from-the-command-line#initialize-request
+--
+-- This assumes you are using sdkman: https://sdkman.io
+-- Paths must be absolute — jdtls does not expand `~`.
+local function sdkman(version)
+  return vim.fn.expand('~/.sdkman/candidates/java/' .. version)
+end
+
 local runtimes = {
-  -- Note: the field `name` must be a valid `ExecutionEnvironment`,
-  -- you can find the list here:
-  -- https://github.com/eclipse/eclipse.jdt.ls/wiki/Running-the-JAVA-LS-server-from-the-command-line#initialize-request
-  --
-  -- This example assume you are using sdkman: https://sdkman.io
-  {
-    name = 'JavaSE-17',
-    path = '~/.sdkman/candidates/java/17.0.18-librca',
-  },
-  {
-    name = 'JavaSE-21',
-    path = vim.fn.expand '~/.sdkman/candidates/java/21.0.10-librca',
-    default = true,
-  },
-  {
-    name = 'JavaSE-23',
-    path = vim.fn.expand '~/.sdkman/candidates/java/23.0.2-tem',
-  },
+  { name = 'JavaSE-17', path = sdkman '17.0.18-librca' },
+  { name = 'JavaSE-21', path = sdkman '21.0.10-librca', default = true },
+  { name = 'JavaSE-23', path = sdkman '23.0.2-tem' },
+  { name = 'JavaSE-25', path = sdkman '25.0.4-tem' },
 }
 
--- INFO: only work for mac add here aditional os and arch if need https://luajit.org/ext_jit.html#jit_arch
----@diagnostic disable-next-line: undefined-global
-local function get_os_arch()
-  local arch = jit.arch
-  local os = jit.os
-  -- if arch arm or arm64 say arm
-  if arch == 'arm' or arch == 'arm64' then
-    arch = 'arm'
-  elseif arch == 'x86' or arch == 'x64' then
-    arch = ''
-  end
-  -- INFO: add here aditional os if need
-  ---@type string
-  local os_name = os
-  if os == 'OSX' then
-    os_name = 'mac'
-  end
-  return os_name, arch
-end
-
-local function get_config_path_name()
-  local os, arch = get_os_arch()
-  if arch == '' then
-    return '/config_' .. os
-  end
-  -- Return the path to the JDTLS config directory
-  return '/config_' .. os .. '_' .. arch
-end
-
+-- The mason `jdtls` script picks the equinox launcher and the platform config
+-- directory itself, so neither has to be resolved here.
 local function get_jdtls()
   local jdtls_path = vim.fn.expand '$MASON/packages/jdtls'
-  -- Obtain the path to the JDTLS launcher jar
-  local launcher = vim.fn.glob(jdtls_path .. '/plugins/org.eclipse.equinox.launcher_*.jar', true)
-  -- Declare the system we are using, windows use win, osx use mac, linux use linux
-  local config = jdtls_path .. get_config_path_name()
   -- Obtaing the path to lombok jar
   local lombok = jdtls_path .. '/lombok.jar'
   -- Obtaing the jdtls
   local jdtls = jdtls_path .. '/jdtls'
-  return launcher, config, lombok, jdtls
+  return lombok, jdtls
 end
 
 local function get_bundles()
   local bundles = {}
 
-  -- Include java-test bundle if present (JUnit 6 support)
+  -- Include the whole java-test bundle set. It ships JUnit 5 and JUnit 6 side by
+  -- side on purpose: `org.eclipse.jdt.junit5.runtime` requires
+  -- `junit-jupiter-migrationsupport` in [5.14.0,6.0.0), so dropping the JUnit 5
+  -- jars leaves that bundle unresolvable and breaks running tests. OSGi picks the
+  -- right versions on its own.
   local java_test_path = vim.fn.expand '$MASON/packages/java-test'
   local java_test_bundle = vim.split(vim.fn.glob(java_test_path .. '/extension/server/*.jar'), '\n')
-  
-  -- Filter to prioritize JUnit 6 jars and exclude conflicting versions
-  local filtered_bundles = {}
-  for _, jar in ipairs(java_test_bundle) do
-    -- Prioritize JUnit 6 jars (6.0.1) over JUnit 5 (5.14.1)
-    if jar:match('_6%.0%.1%.jar$') or jar:match('junit6') then
-      table.insert(filtered_bundles, 1, jar) -- Add JUnit 6 jars first
-    elseif not jar:match('_5%.14%.1%.jar$') and not jar:match('_1%.14%.1%.jar$') and jar ~= '' then
-      table.insert(filtered_bundles, jar)
-    end
-  end
-  
-  if #filtered_bundles > 0 then
-    vim.list_extend(bundles, filtered_bundles)
+  if java_test_bundle[1] ~= '' then
+    vim.list_extend(bundles, java_test_bundle)
   end
 
   -- Include java-debug-adapter bundle if present
@@ -116,15 +73,12 @@ local function get_bundles()
   return bundles
 end
 
-local function get_workspace()
-  -- Get the home directory
-  local home = os.getenv 'HOME'
-  -- Directory where the workspace will be created
-  local workspace_path = home .. '/.cache/nvim/jdtls/'
-  -- Determint the project name
-  local project_name = vim.fn.fnamemodify(vim.fn.getcwd(), ':p:h:t')
-  local workspace_dir = workspace_path .. project_name
-  return workspace_dir
+-- Derived from the project root rather than the cwd, so that opening a file from
+-- a subdirectory reuses the same workspace instead of re-indexing into a new one.
+local function get_workspace(root_dir)
+  local workspace_path = vim.fn.stdpath 'cache' .. '/jdtls/'
+  local project_name = vim.fn.fnamemodify(root_dir, ':p:h:t')
+  return workspace_path .. project_name
 end
 
 local function enable_codelens(bufnr)
@@ -420,7 +374,7 @@ local function java_keymaps(bufnr)
     print(vim.inspect(vim.lsp.buf.list_workspace_folders()))
   end, { desc = '[W]orkspace: [L]ist Folders', buffer = bufnr })
   vim.keymap.set('n', '<leader>cf', function()
-    vim.lsp.buf.formatting()
+    vim.lsp.buf.format { async = true }
   end, { desc = '[C]ode: [F]ormat', buffer = bufnr })
 end
 
@@ -452,15 +406,14 @@ end
 
 local function setup_jdtls()
   local jdtls = require 'jdtls'
-  -- Get the path to the JDTLS launcher jar, config and lombok jar
-  local launch, config, lombok, jdtlsFullPath = get_jdtls()
+  -- Get the path to lombok and to the jdtls launcher script
+  local lombok, jdtlsFullPath = get_jdtls()
+  -- Define the root directory of the project by looking for the specific markers
+  local root_dir = jdtls.setup.find_root(root_files) or vim.fn.getcwd()
   -- Get the workspace directory
-  local workspace_dir = get_workspace()
+  local workspace_dir = get_workspace(root_dir)
   -- Get the bundles list with the jars to the debugger and testing
   local bundles = get_bundles()
-
-  -- Define the root directory of the project by looking for the specific markers
-  -- local root_dir = jdtls.setup.find_root(root_files)
 
   -- Tell our JDTLS language features it is capable of
   -- local capabilities = {
@@ -485,27 +438,18 @@ local function setup_jdtls()
     cache_vars.capabilities = vim.tbl_deep_extend('force', vim.lsp.protocol.make_client_capabilities(), ok_cmp and cmp_lsp.default_capabilities() or {})
   end
 
-  -- Set the command that starts the JDTLS server
+  -- Set the command that starts the JDTLS server.
+  --
+  -- Only the launcher script's own options belong here: it already supplies the
+  -- eclipse/osgi properties, `--add-modules`, `--add-opens`, the equinox jar and
+  -- the platform config directory. Anything it does not recognise is appended
+  -- *after* `-jar`, where it reaches the Eclipse application instead of the JVM
+  -- and is silently ignored. JVM options have to go through `--jvm-arg=`, e.g.
+  -- `--jvm-arg=-Xmx2g` to cap the heap or `--jvm-arg=-Dlog.level=ALL` for
+  -- protocol logs. Without an explicit cap the JVM default applies.
   local cmd = {
     jdtlsFullPath,
-    -- '~/.sdkman/candidates/java/21-tem/bin/java',
-    'java', -- or '/path/to/java17_or_newer/bin/java'
-    '-Declipse.application=org.eclipse.jdt.ls.core.id1',
-    '-Dosgi.bundles.defaultStartLevel=4',
-    '-Declipse.product=org.eclipse.jdt.ls.core.product',
-    '-Dlog.protocol=true',
-    '-Dlog.level=ALL',
     '--jvm-arg=-javaagent:' .. lombok,
-    '-Xmx1g',
-    '--add-modules=ALL-SYSTEM',
-    '--add-opens',
-    'java.base/java.util=ALL-UNNAMED',
-    '--add-opens',
-    'java.base/java.lang=ALL-UNNAMED',
-    '-jar',
-    launch,
-    '-configuration',
-    config,
     '-data',
     workspace_dir,
   }
@@ -553,46 +497,47 @@ local function setup_jdtls()
         --   profile = 'GoogleStyle',
         -- },
       },
-    },
-
-    signatureHelp = { enabled = true },
-    -- Use the fernflower decompiler for Java files
-    contentProvider = { preferred = 'fernflower' },
-    saveActions = {
-      organizeImports = true,
-    },
-    completion = {
-      favoriteStaticMembers = {
-        'org.hamcrest.MatcherAssert.assertThat',
-        'org.hamcrest.Matchers.*',
-        'org.hamcrest.CoreMatchers.*',
-        'org.junit.jupiter.api.Assertions.*',
-        'java.util.Objects.requireNonNull',
-        'java.util.Objects.requireNonNullElse',
-        'org.mockito.Mockito.*',
+      -- NOTE: every preference below has to stay inside this `java` table.
+      -- jdtls only reads the `java.*` namespace, so anything placed next to it
+      -- is silently ignored.
+      signatureHelp = { enabled = true },
+      -- Use the fernflower decompiler for Java files
+      contentProvider = { preferred = 'fernflower' },
+      saveActions = {
+        organizeImports = true,
       },
-      filteredTypes = {
-        'com.sun.*',
-        'java.awt.*',
-        'jdk.*',
-        'sun.*',
+      completion = {
+        favoriteStaticMembers = {
+          'org.hamcrest.MatcherAssert.assertThat',
+          'org.hamcrest.Matchers.*',
+          'org.hamcrest.CoreMatchers.*',
+          'org.junit.jupiter.api.Assertions.*',
+          'java.util.Objects.requireNonNull',
+          'java.util.Objects.requireNonNullElse',
+          'org.mockito.Mockito.*',
+        },
+        filteredTypes = {
+          'com.sun.*',
+          'java.awt.*',
+          'jdk.*',
+          'sun.*',
+        },
       },
-    },
-    extendedClientCapabilities = jdtls.extendedClientCapabilities,
-    sources = {
-      organizeImports = {
-        starThreshold = 9999, -- Disable auto import star
-        staticStarThreshold = 9999, -- Disable auto import static star
+      sources = {
+        organizeImports = {
+          starThreshold = 9999, -- Disable auto import star
+          staticStarThreshold = 9999, -- Disable auto import static star
+        },
       },
-    },
-    codeGeneration = {
-      toString = {
-        template = '${object.className}{${member.name()}=${member.value}, ${otherMembers}}',
+      codeGeneration = {
+        toString = {
+          template = '${object.className}{${member.name()}=${member.value}, ${otherMembers}}',
+        },
+        hashCodeEquals = {
+          useJava7Objects = true,
+        },
+        useBlocks = true,
       },
-      hashCodeEquals = {
-        useJava7Objects = true,
-      },
-      useBlocks = true,
     },
   }
 
@@ -606,7 +551,7 @@ local function setup_jdtls()
     settings = settings,
     on_attach = jdtls_on_attach,
     capabilities = cache_vars.capabilities,
-    root_dir = jdtls.setup.find_root(root_files), --root_dir,
+    root_dir = root_dir,
     flags = {
       allow_incremental_sync = true,
     },
