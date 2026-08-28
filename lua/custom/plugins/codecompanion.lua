@@ -40,10 +40,10 @@ return {
       },
     },
     keys = {
-      { '<leader>at', '<cmd>CodeCompanionChat Toggle<cr>',   desc = '[A]I Chat [T]oggle',         mode = { 'n', 'v' } },
-      { '<leader>aa', '<cmd>CodeCompanionActions<cr>',       desc = '[A]I [A]ctions',              mode = { 'n', 'v' } },
-      { '<leader>ai', '<cmd>CodeCompanion<cr>',              desc = '[A]I [I]nline',               mode = { 'n', 'v' } },
-      { '<leader>af', ':CodeCompanionChat Add<cr>',          desc = '[A]I Add to chat',            mode = 'v' },
+      { '<leader>at', '<cmd>CodeCompanionChat Toggle<cr>', desc = '[A]I Chat [T]oggle', mode = { 'n', 'v' } },
+      { '<leader>aa', '<cmd>CodeCompanionActions<cr>', desc = '[A]I [A]ctions', mode = { 'n', 'v' } },
+      { '<leader>ai', '<cmd>CodeCompanion<cr>', desc = '[A]I [I]nline', mode = { 'n', 'v' } },
+      { '<leader>af', ':CodeCompanionChat Add<cr>', desc = '[A]I Add to chat', mode = 'v' },
     },
   },
 }

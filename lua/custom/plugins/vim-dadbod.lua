@@ -9,10 +9,10 @@ return {
       -- PostgreSQL examples
       -- { name = 'dev_postgres', url = 'postgresql://user:password@localhost:5432/dbname' },
       -- { name = 'prod_postgres', url = 'postgresql://user:password@prod-host:5432/dbname' },
-      
+
       -- MySQL examples
       -- { name = 'dev_mysql', url = 'mysql://user:password@localhost:3306/dbname' },
-      
+
       -- SQLite example
       -- { name = 'local_sqlite', url = 'sqlite:///path/to/database.db' },
     }

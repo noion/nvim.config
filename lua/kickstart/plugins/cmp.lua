@@ -122,12 +122,12 @@ return {
       })
       -- Enable dadbod completion in java/kotlin/go for SQL strings
       cmp.setup.filetype({ 'java', 'kotlin', 'go' }, {
-        sources = cmp.config.sources({
+        sources = cmp.config.sources {
           { name = 'nvim_lsp' },
           { name = 'vim-dadbod-completion' },
           { name = 'luasnip' },
           { name = 'path' },
-        }),
+        },
       })
     end,
   },
