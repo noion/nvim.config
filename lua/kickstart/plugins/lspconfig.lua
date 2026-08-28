@@ -258,7 +258,13 @@ return {
         'groovyls',
         'jdtls',
         'java-debug-adapter',
-        'java-test',
+        -- Pinned ahead of the mason registry, which still points at 0.45.0.
+        -- That build requires org.objectweb.asm in [9.9.0,9.10.0) but ships no
+        -- asm of its own, while jdtls provides 9.10.1 — so
+        -- com.microsoft.java.test.plugin never resolves and none of the
+        -- vscode.java.test.* commands get registered. 0.46.0 bundles a matching
+        -- asm. Drop the pin once the registry catches up.
+        { 'java-test', version = '0.46.0' },
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -275,7 +281,6 @@ return {
           end,
         },
       }
-
     end,
   },
 }

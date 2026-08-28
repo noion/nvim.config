@@ -21,27 +21,83 @@ local features = {
   debugger = true,
 }
 
--- Note: the field `name` must be a valid `ExecutionEnvironment`,
--- you can find the list here:
--- https://github.com/eclipse/eclipse.jdt.ls/wiki/Running-the-JAVA-LS-server-from-the-command-line#initialize-request
---
--- This assumes you are using sdkman: https://sdkman.io
--- Paths must be absolute — jdtls does not expand `~`.
-local function sdkman(version)
-  return vim.fn.expand('~/.sdkman/candidates/java/' .. version)
+-- Execution environment offered to projects when no other runtime matches.
+local default_runtime_major = 21
+
+-- Compare two version numbers split into components, e.g. { 21, 0, 10 }.
+local function is_newer(a, b)
+  for i = 1, math.max(#a, #b) do
+    local x, y = a[i] or 0, b[i] or 0
+    if x ~= y then
+      return x > y
+    end
+  end
+  return false
 end
 
-local runtimes = {
-  { name = 'JavaSE-17', path = sdkman '17.0.18-librca' },
-  { name = 'JavaSE-21', path = sdkman '21.0.10-librca', default = true },
-  { name = 'JavaSE-23', path = sdkman '23.0.2-tem' },
-  { name = 'JavaSE-25', path = sdkman '25.0.4-tem' },
-}
+-- Runtimes are discovered from sdkman instead of being pinned, so the config
+-- keeps working on a machine with a different set of JDKs installed. The `name`
+-- must be a valid `ExecutionEnvironment`, see
+-- https://github.com/eclipse/eclipse.jdt.ls/wiki/Running-the-JAVA-LS-server-from-the-command-line#initialize-request
+-- Paths have to be absolute — jdtls does not expand `~`.
+local function discover_runtimes()
+  local root = vim.fn.expand '~/.sdkman/candidates/java'
+  if vim.fn.isdirectory(root) == 0 then
+    return {}
+  end
+
+  -- Keep the newest install of each major version.
+  local newest = {}
+  for entry, kind in vim.fs.dir(root) do
+    -- `current` is sdkman's symlink to the active JDK, not a version of its own
+    if entry ~= 'current' and (kind == 'directory' or kind == 'link') then
+      local major = tonumber(entry:match '^(%d+)')
+      if major then
+        local version = {}
+        for part in entry:gmatch '%d+' do
+          version[#version + 1] = tonumber(part)
+        end
+        if not newest[major] or is_newer(version, newest[major].version) then
+          newest[major] = { path = root .. '/' .. entry, version = version }
+        end
+      end
+    end
+  end
+
+  local majors = vim.tbl_keys(newest)
+  table.sort(majors)
+
+  local runtimes = {}
+  for _, major in ipairs(majors) do
+    runtimes[#runtimes + 1] = {
+      -- Java 8 and older are named JavaSE-1.x
+      name = major <= 8 and ('JavaSE-1.' .. major) or ('JavaSE-' .. major),
+      path = newest[major].path,
+    }
+  end
+
+  -- Fall back to the newest available JDK when the preferred one is missing.
+  local default = runtimes[#runtimes]
+  for _, runtime in ipairs(runtimes) do
+    if runtime.name == 'JavaSE-' .. default_runtime_major then
+      default = runtime
+    end
+  end
+  if default then
+    default.default = true
+  end
+
+  return runtimes
+end
 
 -- The mason `jdtls` script picks the equinox launcher and the platform config
--- directory itself, so neither has to be resolved here.
+-- directory itself, so neither has to be resolved here. Returns nil when mason
+-- has not installed the package (yet).
 local function get_jdtls()
   local jdtls_path = vim.fn.expand '$MASON/packages/jdtls'
+  if vim.fn.isdirectory(jdtls_path) == 0 then
+    return nil
+  end
   -- Obtaing the path to lombok jar
   local lombok = jdtls_path .. '/lombok.jar'
   -- Obtaing the jdtls
@@ -100,22 +156,22 @@ local function get_test_run_index_from_dap(method_name)
   for _, buf in ipairs(buffers) do
     if vim.api.nvim_buf_is_valid(buf) then
       local buf_name = vim.api.nvim_buf_get_name(buf)
-      if buf_name:match("dap%-repl") or buf_name:match("%[dap%-repl%]") then
+      if buf_name:match 'dap%-repl' or buf_name:match '%[dap%-repl%]' then
         local lines = vim.api.nvim_buf_get_lines(buf, 0, -1, false)
-        
+
         -- Count test runs and find failures
         local run_count = 0
         local failure_indices = {}
-        
+
         for i, line in ipairs(lines) do
-          if line:match("✓%s+" .. method_name) or line:match("✗%s+" .. method_name) then
+          if line:match('✓%s+' .. method_name) or line:match('✗%s+' .. method_name) then
             run_count = run_count + 1
-            if line:match("✗%s+" .. method_name) then
+            if line:match('✗%s+' .. method_name) then
               table.insert(failure_indices, run_count)
             end
           end
         end
-        
+
         return failure_indices
       end
     end
@@ -129,100 +185,94 @@ local function get_parameterized_test_info(file, method_name, line_num)
   if not ok or not lines then
     return nil
   end
-  
+
   local method_line = nil
-  local csv_source_content = ""
+  local csv_source_content = ''
   local in_csv_source = false
-  
+
   -- Find the method and its @CsvSource annotation
   for i, line in ipairs(lines) do
-    if line:match("@CsvSource") then
+    if line:match '@CsvSource' then
       in_csv_source = true
       csv_source_content = line
-    elseif in_csv_source and (line:match("^%s*%}") or line:match("^%s*%)")) then
-      csv_source_content = csv_source_content .. "\n" .. line
+    elseif in_csv_source and (line:match '^%s*%}' or line:match '^%s*%)') then
+      csv_source_content = csv_source_content .. '\n' .. line
       in_csv_source = false
     elseif in_csv_source then
-      csv_source_content = csv_source_content .. "\n" .. line
-    elseif line:match("void%s+" .. method_name .. "%s*%(") then
+      csv_source_content = csv_source_content .. '\n' .. line
+    elseif line:match('void%s+' .. method_name .. '%s*%(') then
       method_line = i
       break
     end
   end
-  
-  if csv_source_content ~= "" then
+
+  if csv_source_content ~= '' then
     -- Parse CSV source values - handle multi-line strings properly
     local params = {}
-    
+
     -- Extract everything between { and }
-    local values_block = csv_source_content:match("%{(.-)%}")
+    local values_block = csv_source_content:match '%{(.-)%}'
     if values_block then
       -- Split by lines and extract quoted strings
-      for line in values_block:gmatch("[^\r\n]+") do
+      for line in values_block:gmatch '[^\r\n]+' do
         -- Match strings like: "print 1 + 2;, 3",
-        local param = line:match('"(.-)"')
+        local param = line:match '"(.-)"'
         if param then
           table.insert(params, param)
         end
       end
     end
-    
+
     return params
   end
-  
+
   return nil
 end
 
 local function enhance_quickfix_with_params()
   local qf_list = vim.fn.getqflist()
   local enhanced_count = 0
-  
+
   -- Group entries by method to get failure indices
   local method_failures = {}
-  
+
   for i, entry in ipairs(qf_list) do
     if entry.text and entry.valid == 1 then
       -- Extract method name from error text
-      local method_name = entry.text:match("^(%w+)%s+org%.opentest4j") or 
-                         entry.text:match("^(%w+)%s+") or
-                         entry.text:match("^([%w_]+)")
-      
+      local method_name = entry.text:match '^(%w+)%s+org%.opentest4j' or entry.text:match '^(%w+)%s+' or entry.text:match '^([%w_]+)'
+
       if method_name then
         if not method_failures[method_name] then
           method_failures[method_name] = {
             entries = {},
-            indices = get_test_run_index_from_dap(method_name)
+            indices = get_test_run_index_from_dap(method_name),
           }
         end
         table.insert(method_failures[method_name].entries, i)
       end
     end
   end
-  
+
   -- Now enhance each entry with the correct parameter index
   for method_name, data in pairs(method_failures) do
     for idx, qf_idx in ipairs(data.entries) do
       local entry = qf_list[qf_idx]
       local param_index = data.indices[idx] or idx
-      
+
       -- Get the file path
-      local file_path = entry.bufnr and entry.bufnr > 0 and 
-                       vim.api.nvim_buf_get_name(entry.bufnr) or 
-                       vim.fn.bufname(entry.bufnr) or
-                       entry.filename or ""
-      
-      if file_path ~= "" then
+      local file_path = entry.bufnr and entry.bufnr > 0 and vim.api.nvim_buf_get_name(entry.bufnr) or vim.fn.bufname(entry.bufnr) or entry.filename or ''
+
+      if file_path ~= '' then
         -- Try to get parameter info
         local params = get_parameterized_test_info(file_path, method_name, entry.lnum)
-        
+
         if params and params[param_index] then
           -- Enhance the text with parameter info
-          local original_error = entry.text:match("org%.opentest4j%.AssertionFailedError:%s*(.+)") or
-                                entry.text:match("expected:%s*(.+)") or
-                                "assertion failed"
-          
-          entry.text = string.format("%s [param %d: %s] - %s", 
-            method_name, 
+          local original_error = entry.text:match 'org%.opentest4j%.AssertionFailedError:%s*(.+)' or entry.text:match 'expected:%s*(.+)' or 'assertion failed'
+
+          entry.text = string.format(
+            '%s [param %d: %s] - %s',
+            method_name,
             param_index,
             params[param_index]:sub(1, 60), -- Truncate long params
             original_error
@@ -232,7 +282,7 @@ local function enhance_quickfix_with_params()
       end
     end
   end
-  
+
   if enhanced_count > 0 then
     -- Update quickfix with enhanced entries
     vim.fn.setqflist(qf_list, 'r')
@@ -245,32 +295,32 @@ local function run_test_with_quickfix(test_func, desc)
   return function()
     -- Run the test
     test_func()
-    
+
     -- Wait for test to complete and DAP to populate quickfix
     vim.defer_fn(function()
       local qf_list = vim.fn.getqflist()
-      
+
       if #qf_list > 0 then
         -- Check if any failures
         local has_failures = false
         for _, entry in ipairs(qf_list) do
-          if entry.type == 'E' or (entry.text and (entry.text:match("AssertionFailedError") or entry.text:match("error"))) then
+          if entry.type == 'E' or (entry.text and (entry.text:match 'AssertionFailedError' or entry.text:match 'error')) then
             has_failures = true
             break
           end
         end
-        
+
         if has_failures then
           -- Enhance quickfix entries with parameter information
           local enhanced = enhance_quickfix_with_params()
-          vim.cmd('copen')
+          vim.cmd 'copen'
           if enhanced then
-            vim.notify("Test failures enhanced with parameter info", vim.log.levels.WARN)
+            vim.notify('Test failures enhanced with parameter info', vim.log.levels.WARN)
           else
-            vim.notify("Test failures added to quickfix", vim.log.levels.WARN)
+            vim.notify('Test failures added to quickfix', vim.log.levels.WARN)
           end
         else
-          vim.notify("All tests passed!", vim.log.levels.INFO)
+          vim.notify('All tests passed!', vim.log.levels.INFO)
         end
       end
     end, 3000) -- Wait 3 seconds for DAP to populate quickfix
@@ -287,15 +337,23 @@ local function enable_debugger(bufnr)
   -- vim.keymap.set('n', '<leader>df', require('jdtls').test_class(), opts)
   -- vim.keymap.set('n', '<leader>dn', require('jdtls').test_nearest_method(), opts)
 
-  vim.keymap.set('n', '<leader>Jt', run_test_with_quickfix(
-    function() jdtls.test_nearest_method() end,
-    'test method'
-  ), { desc = '[J]ava: Run [T]est (with quickfix)', buffer = bufnr })
-  
-  vim.keymap.set('n', '<leader>JT', run_test_with_quickfix(
-    function() jdtls.test_class() end,
-    'test class'
-  ), { desc = '[J]ava: Run [T]est Class (with quickfix)', buffer = bufnr })
+  vim.keymap.set(
+    'n',
+    '<leader>Jt',
+    run_test_with_quickfix(function()
+      jdtls.test_nearest_method()
+    end, 'test method'),
+    { desc = '[J]ava: Run [T]est (with quickfix)', buffer = bufnr }
+  )
+
+  vim.keymap.set(
+    'n',
+    '<leader>JT',
+    run_test_with_quickfix(function()
+      jdtls.test_class()
+    end, 'test class'),
+    { desc = '[J]ava: Run [T]est Class (with quickfix)', buffer = bufnr }
+  )
 end
 
 local function java_keymaps(bufnr)
@@ -408,6 +466,10 @@ local function setup_jdtls()
   local jdtls = require 'jdtls'
   -- Get the path to lombok and to the jdtls launcher script
   local lombok, jdtlsFullPath = get_jdtls()
+  if not lombok then
+    vim.notify('jdtls is not installed — run :MasonInstall jdtls', vim.log.levels.WARN)
+    return
+  end
   -- Define the root directory of the project by looking for the specific markers
   local root_dir = jdtls.setup.find_root(root_files) or vim.fn.getcwd()
   -- Get the workspace directory
@@ -473,7 +535,7 @@ local function setup_jdtls()
       -- If changes to the project will required the developer to update the project configuration advise the developer before applying the change
       configuration = {
         updateBuildConfiguration = 'interactive',
-        runtimes = runtimes,
+        runtimes = discover_runtimes(),
       },
       implementationsCodeLens = {
         enabled = true,
